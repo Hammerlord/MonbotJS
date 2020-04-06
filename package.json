@@ -1,0 +1,20 @@
+{
+    "name": "monbotjs",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "@types/uuid": "^3.4.6",
+        "ramda": "^0.27.0",
+        "uuid": "^3.3.3"
+    },
+    "devDependencies": {
+        "@types/jasmine": "^3.5.9",
+        "jasmine": "^3.5.0",
+        "jasmine-ts": "^0.3.0",
+        "ts-node": "^8.8.1",
+        "typescript": "^3.7.4"
+    },
+    "scripts": {
+        "test": "jasmine-ts \"./tests/**/*.spec.ts\""
+    }
+}
