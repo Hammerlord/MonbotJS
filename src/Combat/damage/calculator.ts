@@ -7,6 +7,7 @@ import { calcEffectivenessBonus } from './effectivenessBonus';
 import { calcSameTypeBonus } from './sameTypeBonus';
 import { sumStat } from '../calculateStatStages';
 import { AbilityBonus } from './abilitybonus/Bonus';
+import { AppliedEffect } from '../../Ability/Effect/AppliedEffect';
 
 interface Actor {
     elements: Elements[];
@@ -42,8 +43,7 @@ export function calculateDamage(
         sameTypeBonus: 0,
         abilityBonus: 0,
         finalDamage: 0,
-        isDefended: false, // TODO true if the target has Defend up.
-        isBlocked: false, // TODO true if the target has a damage reduction
+        isBlocked: false
     };
 
     const { elements, elementCategory, damageMultiplier, damageBonus } = damageSource;
@@ -68,13 +68,15 @@ export function calculateDamage(
     const abilityBonus = abilityBonusMultiplier(actor, target, damageBonus);
     const sameTypeBonus = calcSameTypeBonus(actor.elements, elements);
     const baseDamage = 5;
+    const damageReduction = aggregateDamageReduction(targetTeam);
 
     const damage = [
         damageMultiplier,
         effectivenessBonus,
         categoryMultiplier(actor, target, elementCategory),
         sameTypeBonus,
-        abilityBonus
+        abilityBonus,
+        (1 - damageReduction)
     ].reduce((acc, current) => acc * current, baseDamage);
 
     return {
@@ -82,6 +84,18 @@ export function calculateDamage(
         effectivenessBonus,
         sameTypeBonus,
         abilityBonus,
-        finalDamage: Math.ceil(damage)
+        finalDamage: Math.ceil(damage),
+        isBlocked: damageReduction > 0
     };
+}
+
+function aggregateDamageReduction(team): number {
+    if (!team.active) {
+        return 0;
+    }
+
+    const teamActiveEffects = team.active ? team.active.statusEffects : [];
+    const statusEffects = team.statusEffects.concat(teamActiveEffects);
+    const sum = statusEffects.reduce((acc, { damageReduction = 0 }) => acc + damageReduction, 0);
+    return Math.min(1, sum); // Damage reduction can't go above 1 (100%).
 }

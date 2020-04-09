@@ -47,10 +47,12 @@ export interface Effect {
 
     /** Any change on maximum mana on the target. Can be negative. */
     maxMana?: number;
-
     manaPerTurnActive?: number;
     manaPerTurnInactive?: number;
     absorb?: number;
+
+    /** Float percentage */
+    damageReduction?: number;
 
     /**
      * The number of rounds this lasts for.

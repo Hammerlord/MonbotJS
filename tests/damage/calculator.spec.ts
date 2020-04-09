@@ -38,7 +38,6 @@ describe('Damage calculator', () => {
             sameTypeBonus: 1,
             abilityBonus: 1,
             finalDamage: 5,
-            isDefended: false,
             isBlocked: false
         });
     });
@@ -57,7 +56,6 @@ describe('Damage calculator', () => {
             sameTypeBonus: 0,
             abilityBonus: 0,
             finalDamage: 0,
-            isDefended: false,
             isBlocked: false
         });
     });
@@ -69,7 +67,6 @@ describe('Damage calculator', () => {
             sameTypeBonus: 0,
             abilityBonus: 0,
             finalDamage: 0,
-            isDefended: false,
             isBlocked: false
         });
     });
@@ -82,7 +79,6 @@ describe('Damage calculator', () => {
             sameTypeBonus: 0,
             abilityBonus: 0,
             finalDamage: 0,
-            isDefended: false,
             isBlocked: false
         });
     });
@@ -92,6 +88,30 @@ describe('Damage calculator', () => {
         const target = makeTeam({ magicDef: 10000 }) as any; // Yuuge magic defence
         const result = calculateDamage(actor, target, damageSource);
         expect(result).toEqual(jasmine.objectContaining({ finalDamage: 1 }));
+    });
+
+    it('applies damage reduction status effects', () => {
+        const actor = makeTeam({ magicAtt: 10 }) as any;
+        const target = makeTeam() as any;
+        const result = calculateDamage(actor, target, damageSource);
+        const damageReduction = 0.5;
+        const defendingTarget = makeTeam({ statusEffects: [{ damageReduction }] }) as any;
+        const defendingResult = calculateDamage(actor, defendingTarget, damageSource);
+        expect(defendingResult.finalDamage).toBeCloseTo(result.finalDamage * damageReduction);
+    });
+
+    it('sets the isBlocked flag to true if damage was reduced by a damage reduction effect', () => {
+        const actor = makeTeam({ magicAtt: 10 }) as any;
+        const target = makeTeam({ statusEffects: [{ damageReduction: 0.5 }] }) as any;
+        const result = calculateDamage(actor, target, damageSource);
+        expect(result.isBlocked).toBe(true);
+    });
+
+    it('damage reduction caps at 100%', () => {
+        const actor = makeTeam({ magicAtt: 10 }) as any;
+        const target = makeTeam({ statusEffects: [{ damageReduction: 1.5 }] }) as any;
+        const result = calculateDamage(actor, target, damageSource);
+        expect(result.finalDamage).toEqual(0);
     });
 });
 
