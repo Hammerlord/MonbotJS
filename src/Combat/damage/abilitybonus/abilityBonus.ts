@@ -2,7 +2,11 @@ import { AbilityBonus, ConditionType } from './Bonus';
 import { getNumScalingSteps } from './getScalingSteps';
 import { matchesCondition } from './matchesCondition';
 
-export function abilityBonusMultiplier(actor, target, bonusConfig: AbilityBonus): number {
+export function abilityBonusMultiplier(actor, target, bonusConfig?: AbilityBonus): number {
+    if (!bonusConfig) {
+        return 1;
+    }
+
     const { conditionType, conditions, multiplier = 0, maxSteps = Infinity } = bonusConfig;
 
     if (conditionType === ConditionType.FLAT) {

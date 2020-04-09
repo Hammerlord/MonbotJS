@@ -10,6 +10,7 @@ export interface CombatElemental {
     leftIcon: string;
     rightIcon: string;
     name: string;
+    /** These are base stats, ie. before buffs. */
     HP: number;
     mana: number;
     maxHP: number;

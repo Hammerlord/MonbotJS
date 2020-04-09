@@ -1,3 +1,4 @@
+import { BaseStat } from './../../src/Combat/calculateStatStages';
 import { STAGE_BONUS, MAX_STAGES } from './../../src/constants';
 import { sumStat, calculateStatStages } from "../../src/Combat/calculateStatStages";
 
@@ -80,7 +81,7 @@ describe('sumStat', () => {
     });
 
     it('works with the various stats', () => {
-        ['physicalAtt', 'magicAtt', 'physicalDef', 'magicDef', 'speed'].forEach(stat => {
+        ['physicalAtt', 'magicAtt', 'physicalDef', 'magicDef', 'speed'].forEach((stat: BaseStat) => {
             const team = {
                 active: {
                     [stat]: 10,
@@ -94,7 +95,7 @@ describe('sumStat', () => {
 
             const statAmount = team.active[stat] as number;
             const expected = statAmount + (statAmount * STAGE_BONUS);
-            expect(sumStat(team as any, stat as any)).toEqual(expected);
+            expect(sumStat(team as any, stat)).toEqual(expected);
         });
     });
 });
@@ -102,32 +103,20 @@ describe('sumStat', () => {
 describe('calculateStatStages', () => {
 
     it('limits the maximum number of stages (per config)', () => {
-        const team = {
-            active: {
-                speed: 10,
-                statusEffects: [{
-                    speed: MAX_STAGES + 5,
-                    stacks: 1
-                }]
-            },
-            statusEffects: []
-        };
+        const effects = [{
+            speed: MAX_STAGES + 5,
+            stacks: 1
+        }];
 
-        expect(calculateStatStages(team as any, 'speed')).toEqual(MAX_STAGES);
+        expect(calculateStatStages(effects as any, 'speed')).toEqual(MAX_STAGES);
     });
 
     it('limits the maximum number of negative stages (per config)', () => {
-        const team = {
-            active: {
-                speed: 10,
-                statusEffects: [{
-                    speed: -(MAX_STAGES + 5),
-                    stacks: 1
-                }]
-            },
-            statusEffects: []
-        };
+        const effects = [{
+            speed: -(MAX_STAGES + 5),
+            stacks: 1
+        }];
 
-        expect(calculateStatStages(team as any, 'speed')).toEqual(-MAX_STAGES);
+        expect(calculateStatStages(effects as any, 'speed')).toEqual(-MAX_STAGES);
     });
 });

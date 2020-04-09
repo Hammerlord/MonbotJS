@@ -1,10 +1,102 @@
-import { SAME_TYPE_BONUS } from './../../src/constants';
-import { Elements, ElementCategory } from './../../src/Element/Elements';
-import { calcSameTypeBonus } from "../../src/Combat/damage/sameTypeBonus";
 import { categoryMultiplier } from '../../src/Combat/damage/categoryMultiplier';
 import { calcEffectivenessBonus } from '../../src/Combat/damage/effectivenessBonus';
+import { calcSameTypeBonus } from '../../src/Combat/damage/sameTypeBonus';
+import { SAME_TYPE_BONUS } from './../../src/constants';
+import { ElementCategory, Elements } from './../../src/Element/Elements';
+import { calculateDamage } from '../../src/Combat/damage/calculator';
+
+
+describe('Damage calculator', () => {
+
+    const makeTeam = (stats = {}) => ({
+        active: {
+            elements: [Elements.LIGHTNING],
+            statusEffects: [],
+            physicalAtt: 1,
+            magicAtt: 1,
+            physicalDef: 1,
+            magicDef: 1,
+            ...stats
+        },
+        statusEffects: []
+    });
+
+    const damageSource = {
+        elements: [Elements.FIRE],
+        elementCategory: ElementCategory.MAGIC,
+        damageMultiplier: 1,
+        damageBonus: null
+    };
+
+    it('returns a record with damage details', () => {
+        const actor = makeTeam() as any;
+        const target = makeTeam() as any;
+        const result = calculateDamage(actor, target, damageSource);
+
+        expect(result).toEqual({
+            effectivenessBonus: 1,
+            sameTypeBonus: 1,
+            abilityBonus: 1,
+            finalDamage: 5,
+            isDefended: false,
+            isBlocked: false
+        });
+    });
+
+    it('returns an empty record if the ability is not meant to do damage', () => {
+        const actor = makeTeam({ elements: [Elements.FIRE] }) as any; // Same type bonus
+        const target = makeTeam() as any;
+        const result = calculateDamage(actor, target,
+            {
+                ...damageSource,
+                damageMultiplier: 0
+            });
+
+        expect(result).toEqual({
+            effectivenessBonus: 0,
+            sameTypeBonus: 0,
+            abilityBonus: 0,
+            finalDamage: 0,
+            isDefended: false,
+            isBlocked: false
+        });
+    });
+
+    it('returns an empty record if there was no target', () => {
+        const result = calculateDamage(makeTeam() as any, null, damageSource);
+        expect(result).toEqual({
+            effectivenessBonus: 0,
+            sameTypeBonus: 0,
+            abilityBonus: 0,
+            finalDamage: 0,
+            isDefended: false,
+            isBlocked: false
+        });
+    });
+
+    it('returns an empty record if target team has no active elemental', () => {
+        const target = { active: null, statusEffects: [] } as any;
+        const result = calculateDamage(makeTeam() as any, target, damageSource);
+        expect(result).toEqual({
+            effectivenessBonus: 0,
+            sameTypeBonus: 0,
+            abilityBonus: 0,
+            finalDamage: 0,
+            isDefended: false,
+            isBlocked: false
+        });
+    });
+
+    it('does at least 1 damage, if the ability is meant to do damage', () => {
+        const actor = makeTeam() as any;
+        const target = makeTeam({ magicDef: 10000 }) as any; // Yuuge magic defence
+        const result = calculateDamage(actor, target, damageSource);
+        expect(result).toEqual(jasmine.objectContaining({ finalDamage: 1 }));
+    });
+});
 
 describe('Same type bonus', () => {
+
     it('is granted when the element is the same', () => {
         expect(calcSameTypeBonus([Elements.WATER], [Elements.WATER])).toEqual(SAME_TYPE_BONUS);
     });
@@ -20,6 +112,7 @@ describe('Same type bonus', () => {
 });
 
 describe('Category multiplier', () => {
+
     it('compares physical attack against physical def if the category is physical', () => {
         const actor = { physicalAtt: 50 } as any;
         const target = { physicalDef: 20 } as any;
@@ -40,6 +133,7 @@ describe('Category multiplier', () => {
 });
 
 describe('Effectiveness bonus', () => {
+
     it('returns a damage increase multiplier when the element is super effective', () => {
         expect(calcEffectivenessBonus([Elements.WATER], [Elements.FIRE])).toBeGreaterThan(1);
     });
