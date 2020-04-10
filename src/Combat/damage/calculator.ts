@@ -5,9 +5,10 @@ import { abilityBonusMultiplier } from './abilitybonus/abilityBonus';
 import { categoryMultiplier } from './categoryMultiplier';
 import { calcEffectivenessBonus } from './effectivenessBonus';
 import { calcSameTypeBonus } from './sameTypeBonus';
-import { sumStat } from '../calculateStatStages';
+import { calculateTotalStat } from '../calculateStatStages';
 import { AbilityBonus } from './abilitybonus/Bonus';
 import { AppliedEffect } from '../../Ability/Effect/AppliedEffect';
+import { getActiveEffects } from '../CombatTeam';
 
 interface Actor {
     elements: Elements[];
@@ -54,14 +55,14 @@ export function calculateDamage(
 
     const actor = {
         elements: actingTeam.active.elements,
-        physicalAtt: sumStat(actingTeam, 'physicalAtt'),
-        magicAtt: sumStat(actingTeam, 'magicAtt')
+        physicalAtt: calculateTotalStat(actingTeam, 'physicalAtt'),
+        magicAtt: calculateTotalStat(actingTeam, 'magicAtt')
     } as Actor;
 
     const target = {
         elements: targetTeam.active.elements,
-        physicalDef: sumStat(targetTeam, 'physicalDef'),
-        magicDef: sumStat(targetTeam, 'magicDef')
+        physicalDef: calculateTotalStat(targetTeam, 'physicalDef'),
+        magicDef: calculateTotalStat(targetTeam, 'magicDef')
     } as Target;
 
     const effectivenessBonus = calcEffectivenessBonus(elements, target.elements);
@@ -90,12 +91,7 @@ export function calculateDamage(
 }
 
 function aggregateDamageReduction(team): number {
-    if (!team.active) {
-        return 0;
-    }
-
-    const teamActiveEffects = team.active ? team.active.statusEffects : [];
-    const statusEffects = team.statusEffects.concat(teamActiveEffects);
-    const sum = statusEffects.reduce((acc, { damageReduction = 0 }) => acc + damageReduction, 0);
+    const sum = getActiveEffects(team)
+        .reduce((acc, { damageReduction = 0 }) => acc + damageReduction, 0);
     return Math.min(1, sum); // Damage reduction can't go above 1 (100%).
 }

@@ -25,18 +25,6 @@ export function createCombat(
     };
 }
 
-export function makeCombatTeam(owner: string = null, elementals): CombatTeam {
-    return {
-        id: uuid.v4(),
-        owner,
-        active: null,
-        elementals: elementals.map(makeCombatElemental),
-        defendCharges: 2,
-        statusEffects: [],
-        hasForfeit: false,
-    };
-}
-
 /** Caches the particular battle that a user is participating in. User ID: Combat */
 const combatRegistry = {};
 

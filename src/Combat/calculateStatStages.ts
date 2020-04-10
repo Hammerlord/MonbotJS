@@ -2,17 +2,17 @@ import { clamp } from 'ramda';
 import { MAX_STAGES, STAGE_BONUS } from "../constants";
 import { CombatTeam } from './models';
 import { AppliedEffect } from '../Ability/Effect/AppliedEffect';
+import { getActiveEffects } from './CombatTeam';
 
 export type BaseStat = 'physicalAtt' | 'magicAtt' | 'physicalDef' | 'magicDef' | 'speed';
 
-export function sumStat(team: CombatTeam, stat: BaseStat): number {
+export function calculateTotalStat(team: CombatTeam, stat: BaseStat): number {
     if (!team.active) {
         return 0;
     }
 
     const baseStat = team.active[stat];
-    const teamActiveEffects = team.active ? team.active.statusEffects : [];
-    const stages = calculateStatStages(team.statusEffects.concat(teamActiveEffects), stat);
+    const stages = calculateStatStages(getActiveEffects(team), stat);
     return applyStages(baseStat, stages);
 }
 

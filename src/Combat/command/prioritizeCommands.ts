@@ -1,5 +1,5 @@
 import { coinFlip } from '../../utils';
-import { sumStat } from '../calculateStatStages';
+import { calculateTotalStat } from '../calculateStatStages';
 import { CombatTeam, PopulatedCommand } from './../models';
 
 /**
@@ -25,5 +25,5 @@ export function prioritizeCommands(commands: PopulatedCommand[]): PopulatedComma
 }
 
 function getSpeed(team: CombatTeam): number {
-    return team.active ? sumStat(team, 'speed') : Infinity;
+    return team.active ? calculateTotalStat(team, 'speed') : Infinity;
 }

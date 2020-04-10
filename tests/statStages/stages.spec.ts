@@ -1,6 +1,6 @@
 import { BaseStat } from './../../src/Combat/calculateStatStages';
 import { STAGE_BONUS, MAX_STAGES } from './../../src/constants';
-import { sumStat, calculateStatStages } from "../../src/Combat/calculateStatStages";
+import { calculateTotalStat as totalBaseStat, calculateStatStages } from "../../src/Combat/calculateStatStages";
 
 describe('sumStat', () => {
 
@@ -13,7 +13,7 @@ describe('sumStat', () => {
             }]
         };
 
-        expect(sumStat(team as any, 'speed')).toEqual(0);
+        expect(totalBaseStat(team as any, 'speed')).toEqual(0);
     });
 
     it('applies stat stages from team buffs', () => {
@@ -29,7 +29,7 @@ describe('sumStat', () => {
         };
 
         const expected = team.active.speed + (team.active.speed * STAGE_BONUS);
-        expect(sumStat(team as any, 'speed')).toEqual(expected);
+        expect(totalBaseStat(team as any, 'speed')).toEqual(expected);
     });
 
     it('applies stat stages from active elemental buffs', () => {
@@ -45,7 +45,7 @@ describe('sumStat', () => {
         };
 
         const expected = team.active.speed + (team.active.speed * STAGE_BONUS);
-        expect(sumStat(team as any, 'speed')).toEqual(expected);
+        expect(totalBaseStat(team as any, 'speed')).toEqual(expected);
     });
 
     it('takes stacks of the buffs into account', () => {
@@ -61,7 +61,7 @@ describe('sumStat', () => {
         };
 
         const expected = team.active.speed + (team.active.speed * STAGE_BONUS * 3);
-        expect(sumStat(team as any, 'speed')).toEqual(expected);
+        expect(totalBaseStat(team as any, 'speed')).toEqual(expected);
     });
 
     it('calculates stat decreases correctly', () => {
@@ -77,7 +77,7 @@ describe('sumStat', () => {
         };
 
         const expected = team.active.speed * Math.pow((1 - STAGE_BONUS), 3);
-        expect(sumStat(team as any, 'speed')).toEqual(expected);
+        expect(totalBaseStat(team as any, 'speed')).toEqual(expected);
     });
 
     it('works with the various stats', () => {
@@ -95,7 +95,7 @@ describe('sumStat', () => {
 
             const statAmount = team.active[stat] as number;
             const expected = statAmount + (statAmount * STAGE_BONUS);
-            expect(sumStat(team as any, stat)).toEqual(expected);
+            expect(totalBaseStat(team as any, stat)).toEqual(expected);
         });
     });
 });
