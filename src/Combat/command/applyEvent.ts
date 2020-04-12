@@ -1,6 +1,7 @@
 import { CombatTeam, TeamEvent, CombatEvent, EffectTarget } from './../models';
 import { clamp } from 'ramda';
 import { applyEffects } from '../../Ability/Effect/AppliedEffect';
+import { getEffectById } from '../../Ability/Effect/EffectGateway';
 
 export function applyEvent(getTeamById, event: CombatEvent) {
     event.events.forEach(e => applyTeamEvent(getTeamById(e.team), e));
@@ -35,10 +36,11 @@ export function applyTeamEvent(team: CombatTeam, event: TeamEvent): CombatTeam {
 
     if (effects) {
         const { applied, target, applier } = effects;
+        const effectsToApply = applied.map(getEffectById);
         if (active && target === EffectTarget.ACTIVE_ELEMENTAL) {
-            active.statusEffects = applyEffects(applied, applier, team.active.statusEffects);
+            active.statusEffects = applyEffects(effectsToApply, applier, team.active.statusEffects);
         } else if (target === EffectTarget.TEAM) {
-            team.statusEffects = applyEffects(applied, applier, team.statusEffects);
+            team.statusEffects = applyEffects(effectsToApply, applier, team.statusEffects);
         }
     }
 

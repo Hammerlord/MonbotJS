@@ -88,6 +88,12 @@ export interface Effect {
     /** When this effect is reapplied, does it reset the current number of stacks? Typically false. */
     applyResetStacks: boolean;
 
+    /**
+     * When this effect is reapplied, it adds a stack to/refreshes the same instance regardless of applier.
+     * For example, Chill stacks should share the same instance.
+     */
+    isSingleton: boolean;
+
     /** Increase/decrease a stack of this effect per turn. Eg if 1, adds a stack every turn. */
     stacksPerTurn: number;
 

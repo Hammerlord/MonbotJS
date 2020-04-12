@@ -140,7 +140,7 @@ function triggerEffects(sides: Battlefield, event: CombatEvent): CombatEvent[] {
  * Based on what happened in the TeamEvent, get the EffectEvent(s) that triggered.
  * TODO awkwardly we need the parent event to get more context about what happened.
  */
-function getTriggeredEffectConfigs(appliedEffect: AppliedEffect, event: TeamEvent, parent: CombatEvent): EffectEvent[] {
+function getTriggeredEffectConfigs(effect: AppliedEffect, event: TeamEvent, parent: CombatEvent): EffectEvent[] {
     const {
         onAbilityUse,
         onReceiveAttack,
@@ -148,7 +148,7 @@ function getTriggeredEffectConfigs(appliedEffect: AppliedEffect, event: TeamEven
         onReceiveHealing,
         onSynchro,
         onSwitchIn
-    } = appliedEffect.effect;
+    } = effect;
 
     const configs = [];
     const { damage, healing } = event;

@@ -38,33 +38,61 @@ export function makeAppliedEffect(effect: Effect, applier: string): AppliedEffec
 }
 
 export function applyEffects(
-    effectIds: string[],
+    effects: Effect[],
     applier: string,
     originalStatusEffects: AppliedEffect[]
 ): AppliedEffect[] {
 
-    const effectsToApply = effectIds.reduce((acc, id) => acc[id] = true, {});
+    const original = originalStatusEffects.reduce((acc, effect) => {
+        if (!acc[effect.id]) {
+            acc[effect.id] = {};
+        }
+        acc[effect.id][effect.applier] = effect;
+        return acc;
+    }, {});
 
-    // Check if an instance of the effect by the same applier already exists.
-    // If so, refresh/add stack and move it to the end of the queue.
-    // TODO effects like chill should always stack regardless of applier probably, but anyway...
-    const [needsRefresh, leaveAlone] = partition(
-        (effect: AppliedEffect) => effect.applier === applier && effectsToApply[effect.id],
-        originalStatusEffects);
+    const refreshed = [];
 
-    const newEffects = effectIds
-        .filter(id => needsRefresh.every(effect => effect.id !== id))
-        .map(id => makeAppliedEffect(getEffectById(id), applier));
+    effects.forEach(effect => {
+        if (!original[effect.id]) {
+            // No instance of this effect exists.
+            refreshed.push(makeAppliedEffect(effect, applier));
+            return;
+        }
 
-    return [...leaveAlone, ...needsRefresh.map(refreshEffect), ...newEffects];
+        if (effect.isSingleton) {
+            // There should be one instance of this effect.
+            const existingEffect = Object.values(original[effect.id])[0] as AppliedEffect;
+            refreshed.push(refreshEffect(existingEffect, applier));
+            delete(original[effect.id]);
+            return;
+        }
+
+        // Only refresh the effect if it was applied by the same elemental.
+        const existingEffect = original[effect.id][applier];
+        if (existingEffect) {
+            refreshed.push(refreshEffect(existingEffect, applier));
+            delete(original[effect.id][applier]);
+            return;
+        }
+
+        refreshed.push(makeAppliedEffect(effect, applier));
+    });
+
+    const notRefreshed = effect => original[effect.id] && original[effect.id][effect.applier];
+    return [
+        ...originalStatusEffects.filter(notRefreshed),
+        ...refreshed
+    ];
 }
 
-function refreshEffect(effect: AppliedEffect): AppliedEffect {
+function refreshEffect(effect: AppliedEffect, applier: string): AppliedEffect {
     const { stacks, maxStacks, applyRefreshDuration, maxDuration, duration } = effect;
     return {
         ...effect,
+        applier,
         duration: applyRefreshDuration ? maxDuration : duration,
-        stacks: (stacks < maxStacks) ? stacks + 1 : stacks
+        stacks: Math.min(stacks + 1, maxStacks)
     };
 }
 
