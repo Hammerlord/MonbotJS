@@ -1,4 +1,4 @@
-import { AbilityBonus } from '../Combat/damage/abilitybonus/Bonus';
+import { AbilityBonus } from '../Combat/abilitybonus/Bonus';
 import { Elements, ElementCategory } from '../Element/Elements';
 
 /**
@@ -87,8 +87,7 @@ export interface AbilityAction {
     effects?: string[];
     damageMultiplier?: number;
     damageBonus?: AbilityBonus;
-    healingMultiplier?: number;
-    healingBonus?: AbilityBonus;
+    healing?: AbilityHealing;
 
     /**
      * Adjacent targets affected by this ability.
@@ -103,4 +102,18 @@ export interface AbilityAction {
      * Causes an active elemental switch out
      */
     forceSwitch: boolean;
+}
+
+/**
+ * How to calculate healing on an AbilityAction. Assumptions include:
+ * - Most ability healing will be based on max HP of the caster.
+ * - It doesn't matter what element the healing spell was (famous last words...).
+ */
+export interface AbilityHealing {
+    on: 'target' | 'actor'; // This is who to calculate the healing amount from... not who to target
+    amount: number;
+    calculationType: 'percentage' | 'flat';
+    /** Required if type is 'percentage' */
+    stat?: 'maxHP' | 'HP' | 'maxMana' | 'mana';
+    bonus?: AbilityBonus;
 }

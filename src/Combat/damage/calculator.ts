@@ -1,14 +1,13 @@
-import { ElementCategory } from './../../Element/Elements';
 import { Elements } from '../../Element/Elements';
-import { DamageCalculation, CombatTeam } from '../models';
-import { abilityBonusMultiplier } from './abilitybonus/abilityBonus';
+import { abilityBonusMultiplier } from '../abilitybonus/abilityBonus';
+import { AbilityBonus } from '../abilitybonus/Bonus';
+import { calculateTotalStat } from '../calculateStatStages';
+import { getActiveEffects } from '../CombatTeam';
+import { CombatTeam, DamageCalculation } from '../models';
+import { ElementCategory } from './../../Element/Elements';
 import { categoryMultiplier } from './categoryMultiplier';
 import { calcEffectivenessBonus } from './effectivenessBonus';
 import { calcSameTypeBonus } from './sameTypeBonus';
-import { calculateTotalStat } from '../calculateStatStages';
-import { AbilityBonus } from './abilitybonus/Bonus';
-import { AppliedEffect } from '../../Ability/Effect/AppliedEffect';
-import { getActiveEffects } from '../CombatTeam';
 
 interface Actor {
     elements: Elements[];
@@ -66,7 +65,7 @@ export function calculateDamage(
     } as Target;
 
     const effectivenessBonus = calcEffectivenessBonus(elements, target.elements);
-    const abilityBonus = abilityBonusMultiplier(actor, target, damageBonus);
+    const abilityBonus = abilityBonusMultiplier(actor, target, damageBonus); // Actor and target are incomplete for this calculation..
     const sameTypeBonus = calcSameTypeBonus(actor.elements, elements);
     const baseDamage = 5;
     const damageReduction = aggregateDamageReduction(targetTeam);

@@ -1,5 +1,5 @@
-import { isBuff } from "../../../Ability/Effect/isBuff";
-import { partition } from "../../../utils";
+import { isBuff } from "../../Ability/Effect/isBuff";
+import { partition } from "../../utils";
 
 export function matchesCondition(character, conditionConfig): boolean {
     const {

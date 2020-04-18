@@ -51,8 +51,12 @@ export interface Effect {
     manaPerTurnInactive?: number;
     absorb?: number;
 
-    /** Float percentage */
+    /** Float percentage. This is damage received... */
     damageReduction?: number;
+
+    /** Float percentage. Increases or decreases healing by a multiplier. */
+    healingDone?: number;
+    healingTaken?: number;
 
     /**
      * The number of rounds this lasts for.

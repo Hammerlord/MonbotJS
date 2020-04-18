@@ -1,5 +1,5 @@
-import { partition } from "../../../utils";
-import { isBuff } from "../../../Ability/Effect/isBuff";
+import { partition } from "../../utils";
+import { isBuff } from "../../Ability/Effect/isBuff";
 
 /**
  * Calculate the number of steps to increment a multiplier for an ability bonus.
@@ -24,7 +24,7 @@ export function getNumScalingSteps(actor, target, stepConfigs): number {
         } = config;
 
         const calcSteps = (quotient: number) => Math.floor(quotient) + acc;
-        
+
         if (numEffects) {
             return calcSteps(character.statusEffects.length / numEffects);
         }

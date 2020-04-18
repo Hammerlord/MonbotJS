@@ -1,4 +1,4 @@
-import { EffectType } from '../../../Ability/Effect/Effect';
+import { EffectType } from '../../Ability/Effect/Effect';
 
 export enum ConditionType {
     INCREMENTING = 'incrementing',
@@ -7,7 +7,7 @@ export enum ConditionType {
 }
 
 export interface AbilityBonus {
-    /** 
+    /**
      * Damage multiplier; typically a value < 1 (eg. to multiply by steps when the type is `incrementing`).
      * Final value should have 1 added to it.
      */
@@ -18,7 +18,7 @@ export interface AbilityBonus {
      */
     maxSteps?: number;
 
-    /** 
+    /**
      * Whether this is a pass/fail bonus or a scaling bonus. Examples:
      * Flat: target health is 90% or above
      * Incrementing: multiplier * numDebuffs on target
@@ -26,7 +26,7 @@ export interface AbilityBonus {
      */
     conditionType: ConditionType;
 
-    /** 
+    /**
      * Conditions to pass for the bonus to apply.
      * Multiple conditions are evaluated as "OR".
      */
