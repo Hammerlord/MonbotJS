@@ -2,10 +2,10 @@ import { ElementCategory } from './../../Element/Elements';
 
 
 /**
- * Based on an ability/effect's element category, compares an 
+ * Based on an ability/effect's element category, compares an
  * elemental's attack stat against the corresponding defense stat.
  */
-export function categoryMultiplier(
+export function getCategoryMultiplier(
     actor: { physicalAtt: number, magicAtt: number },
     target: { physicalDef: number, magicDef: number },
     elementCategory: ElementCategory

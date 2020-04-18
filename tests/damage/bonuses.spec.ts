@@ -1,8 +1,8 @@
-import { categoryMultiplier } from '../../src/Combat/damage/categoryMultiplier';
 import { calcEffectivenessBonus } from '../../src/Combat/damage/effectivenessBonus';
 import { calcSameTypeBonus } from '../../src/Combat/damage/sameTypeBonus';
 import { SAME_TYPE_BONUS } from './../../src/constants';
 import { ElementCategory, Elements } from './../../src/Element/Elements';
+import { getCategoryMultiplier } from '../../src/Combat/damage/categoryMultiplier';
 
 describe('Same type bonus', () => {
 
@@ -25,19 +25,19 @@ describe('Category multiplier', () => {
     it('compares physical attack against physical def if the category is physical', () => {
         const actor = { physicalAtt: 50 } as any;
         const target = { physicalDef: 20 } as any;
-        expect(categoryMultiplier(actor, target, ElementCategory.PHYSICAL)).toEqual(50 / 20);
+        expect(getCategoryMultiplier(actor, target, ElementCategory.PHYSICAL)).toEqual(50 / 20);
     });
 
     it('compares magic attack against magic def if the category is magic', () => {
         const actor = { magicAtt: 50 } as any;
         const target = { magicDef: 20 } as any;
-        expect(categoryMultiplier(actor, target, ElementCategory.MAGIC)).toEqual(50 / 20);
+        expect(getCategoryMultiplier(actor, target, ElementCategory.MAGIC)).toEqual(50 / 20);
     });
 
     it('returns 1 if no category was supplied', () => {
         const actor = { magicAtt: 50 } as any;
         const target = { magicDef: 20 } as any;
-        expect(categoryMultiplier(actor, target, undefined)).toEqual(1);
+        expect(getCategoryMultiplier(actor, target, undefined)).toEqual(1);
     });
 });
 

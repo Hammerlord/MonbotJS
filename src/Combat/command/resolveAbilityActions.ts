@@ -1,7 +1,6 @@
 import { TargetType } from '../../Ability/Ability';
-import { calculateTeamDamage } from '../damage/calculator';
 import { AbilityAction } from './../../Ability/Ability';
-import { DamageSource } from './../damage/calculator';
+import { DamageSource, calculateDamage } from './../damage/calculator';
 import { CombatEvent, CombatTeam, EffectTarget, EventType, PopulatedCommand, TeamEvent } from './../models';
 
 export function resolveAbilityAction(
@@ -24,14 +23,12 @@ function mapActionToEvents(
     affectedTeams: CombatTeam[]): TeamEvent[] {
 
     return affectedTeams.map(targetTeam => {
-        if (targetTeam.active.HP === 0) {
-            return;
-        }
 
-        const damage = calculateTeamDamage(
+        const damage = calculateDamage(
             command.team,
             targetTeam,
-            action as DamageSource);
+            action as DamageSource
+        );
 
         const event = {
             team: targetTeam.id,

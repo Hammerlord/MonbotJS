@@ -1,24 +1,41 @@
 import { Elements } from '../../Element/Elements';
 import { abilityBonusMultiplier } from '../abilitybonus/abilityBonus';
 import { AbilityBonus } from '../abilitybonus/Bonus';
-import { calculateTotalStat } from '../calculateStatStages';
-import { getActiveEffects } from '../CombatTeam';
-import { CombatTeam, DamageCalculation } from '../models';
+import { AppliedEffect } from './../../Ability/Effect/AppliedEffect';
 import { ElementCategory } from './../../Element/Elements';
-import { categoryMultiplier } from './categoryMultiplier';
+import { getCategoryMultiplier } from './categoryMultiplier';
 import { calcEffectivenessBonus } from './effectivenessBonus';
 import { calcSameTypeBonus } from './sameTypeBonus';
 
-interface Actor {
-    elements: Elements[];
-    physicalAtt: number;
-    magicAtt: number;
+export interface DamageCalculation {
+    effectivenessMultiplier: number;
+    sameTypeMultiplier: number;
+    totalDamage: number;
+    finalDamage: number;
+    overkill: number;
+    isAttack: boolean;
+    // This is if the damage was reduced by a global damage reduction, such as Stonehide or Frost Barrier.
+    isBlocked: boolean;
 }
 
-interface Target {
+/**
+ * This is a subset of a CombatElemental containing the relevant fields.
+ */
+interface Character {
     elements: Elements[];
+    HP: number;
+    mana: number;
+    maxHP: number;
+    maxMana: number;
+    physicalAtt: number;
+    magicAtt: number;
     physicalDef: number;
     magicDef: number;
+    speed: number;
+    manaPerRoundActive: number;
+    manaPerRoundInactive: number;
+    // These should also include team status effects.
+    statusEffects: AppliedEffect[];
 }
 
 export interface DamageSource {
@@ -26,6 +43,7 @@ export interface DamageSource {
     elementCategory: ElementCategory;
     damageMultiplier: number;
     damageBonus?: AbilityBonus;
+    isAbility: boolean;
 }
 
 /**
@@ -33,64 +51,71 @@ export interface DamageSource {
  * plus the aggregation of the stat-increasing status effects, including *effects applied to the CombatTeam.*
  */
 export function calculateDamage(
-    actingTeam: CombatTeam,
-    targetTeam: CombatTeam | null,
+    actor: Character,
+    target: Character | null,
     damageSource: DamageSource
 ): DamageCalculation {
+    const { elements, elementCategory, damageMultiplier, damageBonus, isAbility } = damageSource;
 
     const result = {
-        effectivenessBonus: 0,
-        sameTypeBonus: 0,
-        abilityBonus: 0,
+        effectivenessMultiplier: 0,
+        sameTypeMultiplier: 0,
+        totalDamage: 0,
         finalDamage: 0,
+        overkill: 0,
+        isAttack: isAbility && damageMultiplier > 0,
         isBlocked: false
     };
 
-    const { elements, elementCategory, damageMultiplier, damageBonus } = damageSource;
-    if (!damageMultiplier || !targetTeam || !targetTeam.active) {
+    if (!damageMultiplier || !target) {
         // This ability does no damage.
         return result;
     }
 
-    const actor = {
-        elements: actingTeam.active.elements,
-        physicalAtt: calculateTotalStat(actingTeam, 'physicalAtt'),
-        magicAtt: calculateTotalStat(actingTeam, 'magicAtt')
-    } as Actor;
-
-    const target = {
-        elements: targetTeam.active.elements,
-        physicalDef: calculateTotalStat(targetTeam, 'physicalDef'),
-        magicDef: calculateTotalStat(targetTeam, 'magicDef')
-    } as Target;
-
-    const effectivenessBonus = calcEffectivenessBonus(elements, target.elements);
+    const effectivenessMultiplier = calcEffectivenessBonus(elements, target.elements);
     const abilityBonus = abilityBonusMultiplier(actor, target, damageBonus); // Actor and target are incomplete for this calculation..
-    const sameTypeBonus = calcSameTypeBonus(actor.elements, elements);
+    const sameTypeMultiplier = calcSameTypeBonus(actor.elements, elements);
     const baseDamage = 5;
-    const damageReduction = aggregateDamageReduction(targetTeam);
+    const damageReduction = aggregate(target.statusEffects, 'damageReduction');
+    const categoryMultiplier = getCategoryMultiplier(
+        {
+            physicalAtt: sumStats(actor, 'physicalAtt'),
+            magicAtt: sumStats(actor, 'magicAtt'),
+        },
+        {
+            physicalDef: sumStats(target, 'physicalDef'),
+            magicDef: sumStats(target, 'magicDef')
+        },
+        elementCategory
+    );
 
-    const damage = [
+    const totalDamage = Math.ceil([
         damageMultiplier,
-        effectivenessBonus,
-        categoryMultiplier(actor, target, elementCategory),
-        sameTypeBonus,
+        effectivenessMultiplier,
+        categoryMultiplier,
+        sameTypeMultiplier,
         abilityBonus,
-        (1 - damageReduction)
-    ].reduce((acc, current) => acc * current, baseDamage);
+        1 - damageReduction
+    ].reduce((acc, current) => acc * current, baseDamage));
+
+    const overkill = Math.max(0, totalDamage - target.HP);
 
     return {
         ...result,
-        effectivenessBonus,
-        sameTypeBonus,
-        abilityBonus,
-        finalDamage: Math.ceil(damage),
+        effectivenessMultiplier,
+        sameTypeMultiplier,
+        overkill,
+        totalDamage,
+        finalDamage: totalDamage - overkill,
         isBlocked: damageReduction > 0
     };
 }
 
-function aggregateDamageReduction(team): number {
-    const sum = getActiveEffects(team)
-        .reduce((acc, { damageReduction = 0 }) => acc + damageReduction, 0);
-    return Math.min(1, sum); // Damage reduction can't go above 1 (100%).
+function sumStats(character: Character, stat: string): number {
+    return (character[stat] || 0) + aggregate(character.statusEffects, stat);
+}
+
+function aggregate(statusEffects: AppliedEffect[], prop: string): number {
+    const sum = statusEffects.reduce((acc, effect) => acc + (effect[prop] || 0), 0);
+    return Math.min(1, sum); // Can't go above 1 (100%).
 }

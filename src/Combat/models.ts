@@ -1,10 +1,11 @@
 /**
  * @file Combat-related data model blueprints
  */
-
-import { Ability } from './../Ability/Ability';
 import { AppliedEffect } from '../Ability/Effect/AppliedEffect';
+import { Ability } from './../Ability/Ability';
 import { CombatElemental } from './../Elemental/CombatElemental';
+import { DamageCalculation } from './damage/calculator';
+import { HealingCalculation } from './healing/calculator';
 
 export type BattlefieldSide = 'A' | 'B';
 
@@ -71,22 +72,6 @@ export interface TeamEvent {
 export enum EffectTarget {
     ACTIVE_ELEMENTAL = 'activeElemental',
     TEAM = 'team'
-}
-
-export interface DamageCalculation {
-    effectivenessBonus?: number;
-    sameTypeBonus?: number;
-    abilityBonus?: number;
-    finalDamage: number;
-    // This is if the damage was reduced by Defend specifically.
-    isDefended?: boolean;
-    // This is if the damage was reduced by a global damage reduction, such as Stonehide or Frost Barrier.
-    isBlocked?: boolean;
-}
-
-export interface HealingCalculation {
-    abilityBonus?: number;
-    finalHealing: number;
 }
 
 /**

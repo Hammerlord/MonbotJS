@@ -1,7 +1,12 @@
 import { AbilityHealing } from '../../Ability/Ability';
 import { abilityBonusMultiplier } from '../abilitybonus/abilityBonus';
 import { AppliedEffect } from './../../Ability/Effect/AppliedEffect';
-import { CombatElemental } from '../../Elemental/CombatElemental';
+
+export interface HealingCalculation {
+    totalHealing: number;
+    overHealing: number;
+    finalHealing: number;
+}
 
 /**
  * This is a subset of a CombatElemental containing the relevant fields.
@@ -26,7 +31,7 @@ export function calculateHealing(
     actor: Character | null,
     target: Character | null,
     healingSource?: AbilityHealing
-) {
+): HealingCalculation {
     const result = {
         totalHealing: 0,
         overHealing: 0,
