@@ -1,6 +1,7 @@
 import { coinFlip } from '../../utils';
 import { calculateTotalStat } from '../calculateStatStages';
 import { CombatTeam, PopulatedCommand } from './../models';
+import { getActiveEffects } from '../CombatTeam';
 
 /**
  * Commands are initially in the order they're received.
@@ -25,5 +26,13 @@ export function prioritizeCommands(commands: PopulatedCommand[]): PopulatedComma
 }
 
 function getSpeed(team: CombatTeam): number {
-    return team.active ? calculateTotalStat(team, 'speed') : Infinity;
+    if (!team.active) {
+        return Infinity;
+    }
+
+    const statusEffects = getActiveEffects(team);
+    return calculateTotalStat({
+        ...team.active,
+        statusEffects
+    }, 'speed');
 }

@@ -1,101 +1,65 @@
 import { BaseStat } from './../../src/Combat/calculateStatStages';
 import { STAGE_BONUS, MAX_STAGES } from './../../src/constants';
-import { calculateTotalStat as totalBaseStat, calculateStatStages } from "../../src/Combat/calculateStatStages";
+import { calculateTotalStat, calculateStatStages } from "../../src/Combat/calculateStatStages";
 
 describe('sumStat', () => {
 
-    it('returns a sum of 0 if the team has no active elemental', () => {
-        const team = {
-            active: null,
-            statusEffects: [{
-                speed: 1,
-                stacks: 1
-            }]
-        };
-
-        expect(totalBaseStat(team as any, 'speed')).toEqual(0);
-    });
-
-    it('applies stat stages from team buffs', () => {
-        const team = {
-            active: {
-                speed: 10,
-                statusEffects: []
-            },
-            statusEffects: [{
-                speed: 1,
-                stacks: 1
-            }]
-        };
-
-        const expected = team.active.speed + (team.active.speed * STAGE_BONUS);
-        expect(totalBaseStat(team as any, 'speed')).toEqual(expected);
+    it('returns a sum of 0 if no character is supplied', () => {
+        expect(calculateTotalStat(null, 'speed')).toEqual(0);
     });
 
     it('applies stat stages from active elemental buffs', () => {
-        const team = {
-            active: {
-                speed: 10,
-                statusEffects: [{
-                    speed: 1,
-                    stacks: 1
-                }]
-            },
-            statusEffects: []
-        };
+        const character = {
+            speed: 10,
+            statusEffects: [{
+                speed: 1,
+                stacks: 1
+            }]
+        } as any;
 
-        const expected = team.active.speed + (team.active.speed * STAGE_BONUS);
-        expect(totalBaseStat(team as any, 'speed')).toEqual(expected);
+        const expected = character.speed + (character.speed * STAGE_BONUS);
+        expect(calculateTotalStat(character, 'speed')).toEqual(expected);
     });
 
     it('takes stacks of the buffs into account', () => {
-        const team = {
-            active: {
-                speed: 10,
-                statusEffects: [{
-                    speed: 1,
-                    stacks: 3
-                }]
-            },
-            statusEffects: []
-        };
+        const character = {
+            speed: 10,
+            statusEffects: [{
+                speed: 1,
+                stacks: 3
+            }]
+        } as any;
 
-        const expected = team.active.speed + (team.active.speed * STAGE_BONUS * 3);
-        expect(totalBaseStat(team as any, 'speed')).toEqual(expected);
+        const expected = character.speed + (character.speed * STAGE_BONUS * 3);
+        expect(calculateTotalStat(character, 'speed')).toEqual(expected);
     });
 
     it('calculates stat decreases correctly', () => {
-        const team = {
-            active: {
-                speed: 10,
-                statusEffects: [{
-                    speed: -1,
-                    stacks: 3
-                }]
-            },
-            statusEffects: []
-        };
+        const character = {
+            speed: 10,
+            statusEffects: [{
+                speed: -1,
+                stacks: 3
+            }]
+        } as any;
 
-        const expected = team.active.speed * Math.pow((1 - STAGE_BONUS), 3);
-        expect(totalBaseStat(team as any, 'speed')).toEqual(expected);
+        const expected = character.speed * Math.pow((1 - STAGE_BONUS), 3);
+        expect(calculateTotalStat(character, 'speed')).toEqual(expected);
     });
 
     it('works with the various stats', () => {
         ['physicalAtt', 'magicAtt', 'physicalDef', 'magicDef', 'speed'].forEach((stat: BaseStat) => {
-            const team = {
-                active: {
-                    [stat]: 10,
-                    statusEffects: [{
-                        [stat]: 1,
-                        stacks: 1
-                    }]
-                },
-                statusEffects: []
-            };
+            const character = {
+                [stat]: 10,
+                statusEffects: [{
+                    [stat]: 1,
+                    stacks: 1
+                }]
+            } as any;
 
-            const statAmount = team.active[stat] as number;
+            const statAmount = character[stat] as number;
             const expected = statAmount + (statAmount * STAGE_BONUS);
-            expect(totalBaseStat(team as any, stat)).toEqual(expected);
+            expect(calculateTotalStat(character, stat)).toEqual(expected);
         });
     });
 });

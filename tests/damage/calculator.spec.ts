@@ -1,3 +1,4 @@
+import { STAGE_BONUS } from './../../src/constants';
 import { calculateDamage, DamageCalculation } from '../../src/Combat/damage/calculator';
 import { ElementCategory, Elements } from './../../src/Element/Elements';
 
@@ -102,5 +103,105 @@ describe('Damage calculator', () => {
         const target = { ...character, statusEffects: [{ damageReduction: 1.5 }] };
         const result = calculateDamage(actor, target, damageSource);
         expect(result.finalDamage).toEqual(0);
+    });
+
+    it('applies stat stages from status effects (physical attack)', () => {
+        const buffedActor = { ...character, statusEffects: [{
+            physicalAtt: 1,
+            stacks: 1
+        }] };
+
+        const damage = { ...damageSource, elementCategory: ElementCategory.PHYSICAL };
+        const unbuffedResult = calculateDamage(character, character, damage);
+        const buffedResult = calculateDamage(buffedActor, character, damage);
+        const expected = Math.ceil(unbuffedResult.finalDamage * (1 + STAGE_BONUS));
+        expect(buffedResult.finalDamage).toEqual(expected);
+    });
+
+    it('applies stat stages from status effects (magic attack)', () => {
+        const buffedActor = { ...character, statusEffects: [{
+            magicAtt: 1,
+            stacks: 1
+        }] };
+
+        const damage = { ...damageSource, elementCategory: ElementCategory.MAGIC };
+        const unbuffedResult = calculateDamage(character, character, damage);
+        const buffedResult = calculateDamage(buffedActor, character, damage);
+        const expected = Math.ceil(unbuffedResult.finalDamage * (1 + STAGE_BONUS));
+        expect(buffedResult.finalDamage).toEqual(expected);
+    });
+
+    it('applies stat stages from status effects (physical def)', () => {
+        const buffedTarget = { ...character, statusEffects: [{
+            physicalDef: 1,
+            stacks: 1
+        }] };
+
+        const damage = { ...damageSource, elementCategory: ElementCategory.PHYSICAL };
+        const unbuffedResult = calculateDamage(character, character, damage);
+        const buffedResult = calculateDamage(character, buffedTarget, damage);
+        const expected = Math.ceil(unbuffedResult.finalDamage * (1 - STAGE_BONUS));
+        expect(buffedResult.finalDamage).toEqual(expected);
+    });
+
+    it('applies stat stages from status effects (magic def)', () => {
+        const buffedTarget = { ...character, statusEffects: [{
+            magicDef: 1,
+            stacks: 1
+        }] };
+
+        const damage = { ...damageSource, elementCategory: ElementCategory.MAGIC };
+        const unbuffedResult = calculateDamage(character, character, damage);
+        const buffedResult = calculateDamage(character, buffedTarget, damage);
+        const expected = Math.ceil(unbuffedResult.finalDamage * (1 - STAGE_BONUS));
+        expect(buffedResult.finalDamage).toEqual(expected);
+    });
+
+    it('physical attack buffs do not affect magic abilities', () => {
+        const buffedActor = { ...character, statusEffects: [{
+            physicalAtt: 1,
+            stacks: 1
+        }] };
+
+        const damage = { ...damageSource, elementCategory: ElementCategory.MAGIC };
+        const unbuffedResult = calculateDamage(character, character, damage);
+        const buffedResult = calculateDamage(buffedActor, character, damage);
+        expect(buffedResult.finalDamage).toEqual(unbuffedResult.finalDamage);
+    });
+
+    it('magic attack buffs do not affect physical abilities', () => {
+        const buffedActor = { ...character, statusEffects: [{
+            magicAtt: 1,
+            stacks: 1
+        }] };
+
+        const damage = { ...damageSource, elementCategory: ElementCategory.PHYSICAL };
+        const unbuffedResult = calculateDamage(character, character, damage);
+        const buffedResult = calculateDamage(buffedActor, character, damage);
+        expect(buffedResult).toEqual(unbuffedResult);
+    });
+
+    it('physical def buffs do not affect magic attacks', () => {
+        const buffedTarget = { ...character, statusEffects: [{
+            physicalDef: 1,
+            stacks: 1
+        }] };
+
+        const damage = { ...damageSource, elementCategory: ElementCategory.MAGIC };
+        const unbuffedResult = calculateDamage(character, character, damage);
+        const buffedResult = calculateDamage(character, buffedTarget, damage);
+        expect(buffedResult).toEqual(unbuffedResult);
+    });
+
+    it('magic def buffs do not affect physical attacks', () => {
+        const buffedTarget = { ...character, statusEffects: [{
+            magicDef: 1,
+            stacks: 1
+        }] };
+
+        const damage = { ...damageSource, elementCategory: ElementCategory.PHYSICAL };
+        const unbuffedResult = calculateDamage(character, character, damage);
+        const buffedResult = calculateDamage(character, buffedTarget, damage);
+        expect(buffedResult).toEqual(unbuffedResult);
     });
 });

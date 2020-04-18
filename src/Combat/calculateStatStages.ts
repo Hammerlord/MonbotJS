@@ -1,18 +1,33 @@
 import { clamp } from 'ramda';
-import { MAX_STAGES, STAGE_BONUS } from "../constants";
-import { CombatTeam } from './models';
 import { AppliedEffect } from '../Ability/Effect/AppliedEffect';
-import { getActiveEffects } from './CombatTeam';
+import { MAX_STAGES, STAGE_BONUS } from "../constants";
 
+/**
+ * These are the stats to which stages are applicable.
+ * A stage is a % increase of that stat per buff applied (think of Pokemon stages).
+ */
 export type BaseStat = 'physicalAtt' | 'magicAtt' | 'physicalDef' | 'magicDef' | 'speed';
 
-export function calculateTotalStat(team: CombatTeam, stat: BaseStat): number {
-    if (!team.active) {
+/**
+ * This is a subset of a CombatElemental containing the relevant fields.
+ */
+interface Character {
+    physicalAtt: number;
+    magicAtt: number;
+    physicalDef: number;
+    magicDef: number;
+    speed: number;
+    // These should also include team status effects.
+    statusEffects: AppliedEffect[];
+}
+
+export function calculateTotalStat(character: Character, stat: BaseStat): number {
+    if (!character) {
         return 0;
     }
 
-    const baseStat = team.active[stat];
-    const stages = calculateStatStages(getActiveEffects(team), stat);
+    const baseStat = character[stat] || 0;
+    const stages = calculateStatStages(character.statusEffects, stat);
     return applyStages(baseStat, stages);
 }
 

@@ -6,6 +6,7 @@ import { ElementCategory } from './../../Element/Elements';
 import { getCategoryMultiplier } from './categoryMultiplier';
 import { calcEffectivenessBonus } from './effectivenessBonus';
 import { calcSameTypeBonus } from './sameTypeBonus';
+import { calculateTotalStat } from '../calculateStatStages';
 
 export interface DamageCalculation {
     effectivenessMultiplier: number;
@@ -79,12 +80,12 @@ export function calculateDamage(
     const damageReduction = aggregate(target.statusEffects, 'damageReduction');
     const categoryMultiplier = getCategoryMultiplier(
         {
-            physicalAtt: sumStats(actor, 'physicalAtt'),
-            magicAtt: sumStats(actor, 'magicAtt'),
+            physicalAtt: calculateTotalStat(actor, 'physicalAtt'),
+            magicAtt: calculateTotalStat(actor, 'magicAtt'),
         },
         {
-            physicalDef: sumStats(target, 'physicalDef'),
-            magicDef: sumStats(target, 'magicDef')
+            physicalDef: calculateTotalStat(target, 'physicalDef'),
+            magicDef: calculateTotalStat(target, 'magicDef')
         },
         elementCategory
     );
@@ -109,10 +110,6 @@ export function calculateDamage(
         finalDamage: totalDamage - overkill,
         isBlocked: damageReduction > 0
     };
-}
-
-function sumStats(character: Character, stat: string): number {
-    return (character[stat] || 0) + aggregate(character.statusEffects, stat);
 }
 
 function aggregate(statusEffects: AppliedEffect[], prop: string): number {
