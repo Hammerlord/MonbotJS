@@ -1,8 +1,8 @@
-import { TargetType } from '../../Ability/Ability';
-import { AbilityAction } from './../../Ability/Ability';
-import { calculateDamage, DamageSource } from './../damage/calculator';
-import { CombatEvent, CombatTeam, EffectTarget, EventType, PopulatedCommand, TeamEvent } from './../models';
-import { getAffectedTeams } from './getAffectedTeams';
+import { AbilityAction, TargetType } from '../../Ability/Ability';
+import { getAffectedTeams } from '../command/getAffectedTeams';
+import { calculateDamage, DamageSource } from '../damage/calculator';
+import { PopulatedCommand, CombatTeam, EffectTarget } from '../models';
+import { CombatEvent, EventType, TeamEvent } from './Event';
 
 export function resolveAbilityAction(
     action: AbilityAction,

@@ -1,24 +1,21 @@
 import { clone } from 'ramda';
-import { Battlefield, CombatEvent, CombatTeam, CommandType, EventType, PopulatedCommand, TeamEvent } from '../models';
-import { Ability } from './../../Ability/Ability';
+import { CombatEvent, EventType, TeamEvent } from '../event/Event';
+import { generateAbilityEvents } from '../event/generateAbilityEvents';
 import { AppliedEffect } from './../../Ability/Effect/AppliedEffect';
-import { EffectEvent } from './../../Ability/Effect/Effect';
-import { applyEvent } from './applyEvent';
+import { CommandType, PopulatedCommand, Battlefield } from './../models';
 import { isActionableCommand } from './isActionableCommand';
 import { prioritizeCommands } from './prioritizeCommands';
-import { resolveAbilityAction } from './resolveAbilityActions';
+import { teamGetter } from '../helpers';
+import { generateSwitchEvents } from '../event/generateSwitchEvents';
 
 
-export function resolveCommands(commands: PopulatedCommand[], sides) { // TODO battlefield status effects
-    // Deep clone against mutations. TODO ???
-    const battlefield = clone(sides);
-    const { A, B } = battlefield;
-
-    const getTeamById = teamGetter(A.concat(B));
+export function resolveCommands(commands: PopulatedCommand[], sides: Battlefield): CombatEvent[] {
+    sides = clone(sides);
+    const getTeamById = teamGetter(sides.A.concat(sides.B));
 
     return prioritizeCommands(commands).reduce((acc, command) => {
-        if (isActionableCommand(battlefield, command)) {
-            acc.push(...generateEvents(battlefield, command));
+        if (isActionableCommand(sides, command)) {
+            acc.push(...generateEvents(getTeamById, sides, command));
         }
         return acc;
     }, []);
@@ -33,8 +30,8 @@ const getCommandHydrater = getAbilityById => getTeamById => command => {
     };
 }
 
-function generateEvents(sides, command): CombatEvent[] {
-    const { type, ability, team } = command;
+function generateEvents(getTeamById, sides, command): CombatEvent[] {
+    const { type } = command;
     switch (type) {
         case CommandType.ABILITY:
             return generateAbilityEvents(command, sides);
@@ -45,102 +42,17 @@ function generateEvents(sides, command): CombatEvent[] {
             // TODO
             break;
         case CommandType.SWITCH:
-            return generateSwitchEvents(command);
+            return generateSwitchEvents(getTeamById, command);
     }
 
     return [];
 }
 
-function generateAbilityEvents(command: PopulatedCommand, sides: Battlefield): CombatEvent[] {
-    const { ability, team } = command;
-    const abilityUseEvent = makeAbilityUseEvent(ability, team);
-    applyEvent(team, abilityUseEvent); // TODO wrong param...
-    const events = [abilityUseEvent];
-
-    for (const action of ability.actions) {
-        if (!team.active || team.active.HP === 0) { // TODO or is stunned
-            break;
-        }
-
-        const event = resolveAbilityAction(action, command, sides);
-        applyEvent(team, event);
-        events.push(event);
-    }
-
-    return events;
-}
-
-
-function makeAbilityUseEvent(ability: Ability, team: CombatTeam): CombatEvent {
-    const { id, requirements } = ability;
-    const event = {
-        team: team.id,
-        damage: {
-            finalDamage: 0, // This is the upfront ability cost.
-        },
-        defendChargesChange: -(requirements?.defendCost || 0),
-        manaChange: -(requirements?.manaCost || 0)
-    };
-
-    return {
-        type: EventType.ABILITY_USE,
-        source: id,
-        events: [event]
-    };
-}
-
-function generateSwitchEvents(command) {
-    const events = [];
-    const switchEvent = makeSwitchEvent(command);
-    applyEvent(switchEvent);
-    events.push(switchEvent);
-    // TODO status effects
-    return events;
-}
-
-function makeSwitchEvent(command: PopulatedCommand): CombatEvent {
-    const { team, switchedWith } = command;
-
-    return {
-        type: EventType.SWITCH,
-        source: null,
-        events: [{
-            team: team.id,
-            switchedWith
-        }]
-    };
-}
-
-function triggerEffects(sides: Battlefield, event: CombatEvent): CombatEvent[] {
-    const { A, B } = sides;
-    const events = [];
-    A.concat(B).forEach(team => {
-        team.statusEffects.forEach((effect: AppliedEffect) => {
-            const configs = getTriggeredEffectConfigs(effect, event)
-            const event = {
-                type: EventType.EFFECT_TRIGGER,
-                source: effect.id,
-
-            };
-
-            events.push(event);
-        });
-
-        if (team.active) {
-            team.active.statusEffects.forEach((effect: AppliedEffect) => {
-                const config = trigger(effect);
-            });
-        }
-    });
-
-    return events;
-}
-
 /**
  * Based on what happened in the TeamEvent, get the EffectEvent(s) that triggered.
- * TODO awkwardly we need the parent event to get more context about what happened.
  */
-function getTriggeredEffectConfigs(effect: AppliedEffect, event: TeamEvent, parent: CombatEvent): EffectEvent[] {
+const getTriggeredEffectConfigs = (type: EventType) => (event: TeamEvent, effect: AppliedEffect) => {
+
     const {
         onAbilityUse,
         onReceiveAttack,
@@ -167,7 +79,7 @@ function getTriggeredEffectConfigs(effect: AppliedEffect, event: TeamEvent, pare
         configs.push(onReceiveHealing);
     }
 
-    switch (parent.type) {
+    switch (type) {
         case EventType.ABILITY_USE:
             configs.push(onAbilityUse);
             break;
@@ -179,17 +91,6 @@ function getTriggeredEffectConfigs(effect: AppliedEffect, event: TeamEvent, pare
             break;
     }
 
-    return configs.filter(item => item);
-}
+    return configs.filter(item => item); // Filter undefined
+};
 
-function parseEffectConfig(config: EffectEvent, target, applier) {
-    // Let's assume for now effects are only concerned with target/applier....
-    // TODO config conditions
-
-}
-
-
-function teamGetter(teams): (id: string) => CombatTeam | undefined {
-    const teamIdMap = teams.reduce((acc, team) => ({ ...acc, [team.id]: team }), {});
-    return id => teamIdMap[id];
-}

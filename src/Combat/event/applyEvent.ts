@@ -1,11 +1,8 @@
-import { CombatTeam, TeamEvent, CombatEvent, EffectTarget } from './../models';
 import { clamp } from 'ramda';
 import { applyEffects } from '../../Ability/Effect/AppliedEffect';
 import { getEffectById } from '../../Ability/Effect/EffectGateway';
-
-export function applyEvent(getTeamById, event: CombatEvent) {
-    event.events.forEach(e => applyTeamEvent(getTeamById(e.team), e));
-}
+import { CombatTeam, EffectTarget } from '../models';
+import { TeamEvent } from './Event';
 
 /**
  * This *mutates team* and returns it in its updated state.
@@ -20,18 +17,12 @@ export function applyTeamEvent(team: CombatTeam, event: TeamEvent): CombatTeam {
     const { active } = team;
     if (active) {
         const clampHP = clamp(0, active.maxHP);
+        const finalDamage = damage ? damage.finalDamage : 0;
+        const finalHealing = healing ? healing.finalHealing : 0;
+        const finalManaChange = manaChange || 0;
 
-        if (damage) {
-            active.HP = clampHP(damage.finalDamage);
-        }
-
-        if (healing) {
-            active.HP = clampHP(healing.finalHealing);
-        }
-
-        if (manaChange) {
-            active.mana = clamp(0, active.maxMana, manaChange);
-        }
+        active.HP = clampHP(active.HP - finalDamage + finalHealing);
+        active.mana = clamp(0, active.maxMana, active.mana + finalManaChange);
     }
 
     if (effects) {
