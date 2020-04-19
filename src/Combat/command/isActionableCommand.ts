@@ -1,7 +1,8 @@
-import { Battlefield } from './../models';
 import { TargetType } from '../../Ability/Ability';
 import { canUseAbility } from '../abilityparser';
+import { getActiveEffects } from '../CombatTeam';
 import { CommandType, PopulatedCommand } from '../models';
+import { getAffectedTeams } from './getAffectedTeams';
 
 /**
  * True if the active elemental is able to act on the command.
@@ -11,16 +12,20 @@ import { CommandType, PopulatedCommand } from '../models';
  * In which case the command would be rejected from the queue.
  */
 export function isActionableCommand(sides, command: PopulatedCommand): boolean {
-    const { team, type, ability, originalActive } = command;
+    const { type } = command;
 
     if (type === CommandType.ABILITY) {
-        return isActionableAbility(command, sides);
+        const hasValidTargets = targetType => getAffectedTeams(targetType, command, sides).length === 0;
+        return isActionableAbilityCommand(hasValidTargets, command);
     }
 
     return true;
 }
 
-function isActionableAbility(command: PopulatedCommand, sides: Battlefield): boolean {
+export function isActionableAbilityCommand(
+    hasValidTargets: (targetType: TargetType) => boolean,
+    command: PopulatedCommand): boolean {
+
     const { team, ability, originalActive } = command;
     const { active, defendCharges } = team;
 
@@ -32,25 +37,15 @@ function isActionableAbility(command: PopulatedCommand, sides: Battlefield): boo
         return false;
     }
 
-    if (ability && !canUseAbility(active, defendCharges, ability.requirements)) {
+    if (ability && !canUseAbility(
+        { ...active, statusEffects: getActiveEffects(team) },
+        defendCharges,
+        ability.requirements)) {
         return false;
     }
 
-    /**
-     * One action may deal single-target damage, while the next heals a target.
-     * If one action fails, the rest should still be able to trigger.
-     */
-    const targetIsInvalid = ({ targetType }) => {
-        if (![TargetType.ALLY_ACTIVE, TargetType.ENEMY_ACTIVE].includes(targetType)) {
-            return false;
-        }
-
-        const side = sides[command.side];
-        const targetTeam = side[command.slot];
-        return !targetTeam || !targetTeam.active || targetTeam.active.HP === 0;
-    };
-
-    if (ability.actions.every(targetIsInvalid)) {
+    const hasNoValidTargets = ({ targetType }) => !hasValidTargets(targetType);
+    if (ability.actions.every(hasNoValidTargets)) {
         return false;
     }
 

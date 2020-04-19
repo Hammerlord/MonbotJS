@@ -4,12 +4,13 @@ import { EffectType } from '../Ability/Effect/Effect';
 
 
 /**
- * True if the CombatTeam can use a particular ability.
+ * True if an elemental can use a particular ability.
+ * Status effects should include team status effects.
  */
 export function canUseAbility(
     actor: { HP: number, mana: number, statusEffects: AppliedEffect[] },
-    defendCharges: number,
-    requirements: AbilityRequirements): boolean {
+    defendCharges: number = 0,
+    requirements?: AbilityRequirements): boolean {
 
     if (!actor) {
         return false;
@@ -26,5 +27,5 @@ export function canUseAbility(
     const hpCost = requirements.hpCost || 0;
     const manaCost = requirements.manaCost || 0;
     const defendCost = requirements.defendCost || 0;
-    return (defendCharges > defendCost) && (actor.HP > hpCost) && (actor.mana >= manaCost);
+    return (defendCharges >= defendCost) && (actor.HP > hpCost) && (actor.mana >= manaCost);
 }
