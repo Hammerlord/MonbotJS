@@ -45,6 +45,14 @@ export interface DamageSource {
     damageMultiplier: number;
     damageBonus?: AbilityBonus;
     isAbility: boolean;
+    // Base damage off of a stat instead of normal damage calculation
+    calculation?: {
+        calculationTarget: 'target' | 'actor';
+        stat?: 'maxHP' | 'HP' | 'maxMana' | 'mana' | 'level';
+        // Deals the calculated amount of damage no matter what
+        isFlat?: boolean;
+        amount?: number;
+    }
 }
 
 /**
@@ -56,7 +64,14 @@ export function calculateDamage(
     target: Character | null,
     damageSource: DamageSource
 ): DamageCalculation {
-    const { elements, elementCategory, damageMultiplier, damageBonus, isAbility } = damageSource;
+    const {
+        elements,
+        elementCategory,
+        damageMultiplier,
+        damageBonus,
+        isAbility,
+        calculation
+    } = damageSource;
 
     const result = {
         effectivenessMultiplier: 0,
@@ -73,10 +88,34 @@ export function calculateDamage(
         return result;
     }
 
+    const { stat, calculationTarget, isFlat, amount } = calculation || {};
+    let baseDamage = amount || 5;
+    if (stat) {
+        if (calculationTarget === 'actor' && actor) {
+            baseDamage = actor[stat] || 0;
+        } else if (calculationTarget === 'target') {
+            baseDamage = target[stat] || 0;
+        }
+    }
+
+    if (isFlat) {
+        const totalDamage = Math.ceil(baseDamage * damageMultiplier);
+        const overkill = Math.max(0, totalDamage - target.HP);
+
+        return {
+            ...result,
+            effectivenessMultiplier: 1,
+            sameTypeMultiplier: 1,
+            overkill,
+            totalDamage,
+            finalDamage: totalDamage - overkill,
+            isBlocked: false
+        };
+    }
+
     const effectivenessMultiplier = calcEffectivenessBonus(elements, target.elements);
     const abilityBonus = abilityBonusMultiplier(actor, target, damageBonus); // Actor and target are incomplete for this calculation..
     const sameTypeMultiplier = calcSameTypeBonus(actor.elements, elements);
-    const baseDamage = 5;
     const damageReduction = aggregate(target.statusEffects, 'damageReduction');
     const categoryMultiplier = getCategoryMultiplier(
         {

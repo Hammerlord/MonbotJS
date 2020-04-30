@@ -204,4 +204,88 @@ describe('Damage calculator', () => {
         const buffedResult = calculateDamage(character, buffedTarget, damage);
         expect(buffedResult).toEqual(unbuffedResult);
     });
+
+    describe('Stat-based calculations', () => {
+
+        it('can deal a percentage of target max HP', () => {
+            const multiplier = 0.3;
+            const target = {
+                ...character,
+                maxHP: 12
+            };
+            const result = calculateDamage(character, target, {
+                ...damageSource,
+                damageMultiplier: multiplier,
+                calculation: {
+                    calculationTarget: 'target',
+                    stat: 'maxHP',
+                    isFlat: true
+                }
+            });
+
+            expect(result).toEqual({
+                effectivenessMultiplier: 1,
+                sameTypeMultiplier: 1,
+                totalDamage: Math.ceil(target.maxHP * multiplier),
+                finalDamage: Math.ceil(target.maxHP * multiplier),
+                overkill: 0,
+                isBlocked: false,
+                isAttack: true
+            });
+        });
+
+        it('can deal a percentage of actor health', () => {
+            const multiplier = 0.2;
+            const actor = {
+                ...character,
+                maxHP: 18
+            };
+            const result = calculateDamage(actor, character, {
+                ...damageSource,
+                damageMultiplier: multiplier,
+                calculation: {
+                    calculationTarget: 'actor',
+                    stat: 'maxHP',
+                    isFlat: true
+                }
+            });
+
+            expect(result).toEqual({
+                effectivenessMultiplier: 1,
+                sameTypeMultiplier: 1,
+                totalDamage: Math.ceil(actor.maxHP * multiplier),
+                finalDamage: Math.ceil(actor.maxHP * multiplier),
+                overkill: 0,
+                isBlocked: false,
+                isAttack: true
+            });
+        });
+
+        it('can deal damage equal to the actor level', () => {
+            const actor = {
+                ...character,
+                level: 10
+            };
+
+            const result = calculateDamage(actor, character, {
+                ...damageSource,
+                damageMultiplier: 1,
+                calculation: {
+                    calculationTarget: 'actor',
+                    stat: 'level',
+                    isFlat: true
+                }
+            });
+
+            expect(result).toEqual({
+                effectivenessMultiplier: 1,
+                sameTypeMultiplier: 1,
+                totalDamage: actor.level,
+                finalDamage: actor.level,
+                overkill: 0,
+                isBlocked: false,
+                isAttack: true
+            });
+        });
+    });
 });
