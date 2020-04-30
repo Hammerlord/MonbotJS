@@ -39,6 +39,18 @@ describe('Category multiplier', () => {
         const target = { magicDef: 20 } as any;
         expect(getCategoryMultiplier(actor, target, undefined)).toEqual(1);
     });
+
+    it('imposes a minimum of 1 of each stat if any stat is below 1 (physical)', () => {
+        const actor = { physicalAtt: 0 } as any;
+        const target = { physicalDef: 0 } as any;
+        expect(getCategoryMultiplier(actor, target, ElementCategory.PHYSICAL)).toEqual(1);
+    });
+
+    it('imposes a minimum of 1 of each stat if any stat is below 1 (magic)', () => {
+        const actor = { magicAtt: 0 } as any;
+        const target = { magicDef: 0 } as any;
+        expect(getCategoryMultiplier(actor, target, ElementCategory.MAGIC)).toEqual(1);
+    });
 });
 
 describe('Effectiveness bonus', () => {

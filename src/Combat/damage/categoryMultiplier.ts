@@ -10,10 +10,11 @@ export function getCategoryMultiplier(
     target: { physicalDef: number, magicDef: number },
     elementCategory: ElementCategory
 ): number {
+    const withFloor = (stat: number) => Math.max(1, stat);
     if (elementCategory === ElementCategory.PHYSICAL) {
-        return actor.physicalAtt / target.physicalDef;
+        return withFloor(actor.physicalAtt) / withFloor(target.physicalDef);
     } else if (elementCategory === ElementCategory.MAGIC) {
-        return actor.magicAtt / target.magicDef;
+        return withFloor(actor.magicAtt) / withFloor(target.magicDef);
     }
     return 1;
 }
