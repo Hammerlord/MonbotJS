@@ -17,7 +17,7 @@ describe('sumStat', () => {
             }]
         } as any;
 
-        const expected = character.speed + (character.speed * STAGE_BONUS);
+        const expected = Math.ceil(character.speed + (character.speed * STAGE_BONUS));
         expect(calculateTotalStat(character, 'speed')).toEqual(expected);
     });
 
@@ -30,7 +30,7 @@ describe('sumStat', () => {
             }]
         } as any;
 
-        const expected = character.speed + (character.speed * STAGE_BONUS * 3);
+        const expected = Math.ceil(character.speed + (character.speed * STAGE_BONUS * 3));
         expect(calculateTotalStat(character, 'speed')).toEqual(expected);
     });
 
@@ -43,7 +43,7 @@ describe('sumStat', () => {
             }]
         } as any;
 
-        const expected = character.speed * Math.pow((1 - STAGE_BONUS), 3);
+        const expected = Math.ceil(character.speed * Math.pow((1 - STAGE_BONUS), 3));
         expect(calculateTotalStat(character, 'speed')).toEqual(expected);
     });
 
@@ -58,9 +58,21 @@ describe('sumStat', () => {
             } as any;
 
             const statAmount = character[stat] as number;
-            const expected = statAmount + (statAmount * STAGE_BONUS);
+            const expected = Math.ceil(statAmount + (statAmount * STAGE_BONUS));
             expect(calculateTotalStat(character, stat)).toEqual(expected);
         });
+    });
+
+    it('returns a minimum of 1 stat', () => {
+        const character = {
+            speed: 1,
+            statusEffects: [{
+                speed: -5,
+                stacks: 3
+            }]
+        } as any;
+
+        expect(calculateTotalStat(character, 'speed')).toEqual(1);
     });
 });
 

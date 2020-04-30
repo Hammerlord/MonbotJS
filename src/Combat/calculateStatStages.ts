@@ -26,9 +26,9 @@ export function calculateTotalStat(character: Character, stat: BaseStat): number
         return 0;
     }
 
-    const baseStat = character[stat] || 0;
+    const baseStat = character[stat] || 1;
     const stages = calculateStatStages(character.statusEffects, stat);
-    return applyStages(baseStat, stages);
+    return Math.ceil(applyStages(baseStat, stages));
 }
 
 export function calculateStatStages(statusEffects: AppliedEffect[], stat: string): number {
