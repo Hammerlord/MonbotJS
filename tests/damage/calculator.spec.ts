@@ -10,10 +10,10 @@ describe('Damage calculator', () => {
         statusEffects: [],
         HP: 10,
         maxHP: 10,
-        physicalAtt: 1,
-        magicAtt: 1,
-        physicalDef: 1,
-        magicDef: 1
+        physicalAtt: 5,
+        magicAtt: 5,
+        physicalDef: 5,
+        magicDef: 5
     } as any;
 
     const damageSource = {
