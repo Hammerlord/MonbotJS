@@ -43,15 +43,13 @@ export function calculateHealing(
         return result;
     }
 
-    const { stat, amount, calculationType, bonus, on } = healingSource;
-    let baseHealing = 0;
-    if (calculationType === 'flat') {
-        baseHealing = amount;
-    } else if (calculationType === 'percentage') {
-        if (on === 'actor' && actor) {
-            baseHealing = (actor[stat] || 0) * amount;
-        } else if (on === 'target') {
-            baseHealing = (target[stat] || 0) * amount;
+    const { stat, amount, multiplier = 1, bonus, calculationTarget } = healingSource;
+    let baseHealing = amount || 0;
+    if (stat) {
+        if (calculationTarget === 'actor' && actor) {
+            baseHealing = actor[stat] || 0;
+        } else if (calculationTarget === 'target') {
+            baseHealing = target[stat] || 0;
         }
     }
 
@@ -65,6 +63,7 @@ export function calculateHealing(
 
     const totalHealing = Math.ceil([
         baseHealing,
+        multiplier,
         1 + healingDone,
         1 + healingTaken,
         abilityBonus

@@ -47,7 +47,7 @@ export interface DamageSource {
     isAbility: boolean;
     // Base damage off of a stat instead of normal damage calculation
     calculation?: {
-        calculationTarget: 'target' | 'actor';
+        calculationTarget?: 'target' | 'actor';
         stat?: 'maxHP' | 'HP' | 'maxMana' | 'mana' | 'level';
         // Deals the calculated amount of damage no matter what
         isFlat?: boolean;

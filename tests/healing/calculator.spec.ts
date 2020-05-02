@@ -3,7 +3,7 @@ import { AbilityHealing } from "../../src/Ability/Ability";
 
 describe('calculateHealing', () => {
 
-    function getExpectedHealing(sources: number[]): number {
+    function multiply(sources: number[]): number {
         return Math.ceil(sources.reduce((acc, cur) => acc * cur));
     }
 
@@ -37,45 +37,33 @@ describe('calculateHealing', () => {
         expect(result).toEqual(noHealing);
     });
 
-    describe('AbilityHealing misconfiguration returns an empty record', () => {
+    describe('AbilityHealing configuration does not return invalid healing', () => {
         // The expectation here is that it doesn't explode.
         const character = {
+            HP: 10,
             maxHP: 10,
             statusEffects: []
         } as any;
 
         const valid = {
-            calculationType: 'percentage',
-            on: 'target',
+            calculationTarget: 'target',
             stat: 'maxHP',
             amount: 10
         } as AbilityHealing;
 
-        it('if on property is invalid', () => {
+        it('if calculationTarget property is invalid', () => {
             [null, 'notActor', ''].forEach((invalidValue: any) => {
-                const result = calculateHealing(character, character, { ...valid, on: invalidValue });
-                expect(result).toEqual(noHealing);
+                const result = calculateHealing(character, character, { ...valid, calculationTarget: invalidValue });
+                expect(Object.values(result).every(value => !isNaN(value)));
             });
         });
 
-        it('if calculationType is invalid', () => {
-            ['', 'invalid'].forEach((invalidValue: any) => {
-                const result = calculateHealing(character, character, { ...valid, calculationType: invalidValue });
-                expect(result).toEqual(noHealing);
+        it('if amount is not provided', () => {
+            const result = calculateHealing(character, character, {
+                ...valid,
+                amount: null
             });
-        });
-
-        it('if amount is 0', () => {
-            expect(calculateHealing(character, character, {
-                ...valid,
-                amount: 0
-            })).toEqual(noHealing);
-
-            expect(calculateHealing(character, character, {
-                ...valid,
-                calculationType: 'flat',
-                amount: 0
-            })).toEqual(noHealing);
+            expect(Object.values(result).every(value => !isNaN(value)));
         });
 
         it('if the stat to base calculations on is invalid', () => {
@@ -86,7 +74,7 @@ describe('calculateHealing', () => {
 
             expect(calculateHealing(character, character, {
                 ...valid,
-                on: 'actor',
+                calculationTarget: 'actor',
                 stat: 'invalid' as any
             })).toEqual(noHealing);
         });
@@ -99,14 +87,11 @@ describe('calculateHealing', () => {
             statusEffects: []
         } as any;
 
-        const valid = {
-            calculationType: 'flat',
-            on: 'target',
-            stat: 'maxHP',
+        const healing = {
             amount: 10
         } as AbilityHealing;
 
-        const result = calculateHealing(character, character, valid);
+        const result = calculateHealing(character, character, healing);
         expect(result).toEqual({
             totalHealing: 10,
             finalHealing: character.maxHP - character.HP,
@@ -122,16 +107,15 @@ describe('calculateHealing', () => {
         } as any;
 
         const healingSource = {
-            calculationType: 'percentage',
-            on: 'actor',
+            calculationTarget: 'actor',
             stat: 'maxHP',
-            amount: 0.5
+            multiplier: 0.5
         } as AbilityHealing;
 
         const result = calculateHealing(character, character, healingSource);
-        const expectedHealing = getExpectedHealing([
+        const expectedHealing = multiply([
             character.maxHP,
-            healingSource.amount
+            healingSource.multiplier
         ]);
 
         expect(result).toEqual({
@@ -149,10 +133,9 @@ describe('calculateHealing', () => {
         } as any;
 
         const healingSource = {
-            calculationType: 'percentage',
-            on: 'actor',
+            calculationTarget: 'actor',
             stat: 'maxHP',
-            amount: 0.5
+            multiplier: 0.5
         } as AbilityHealing;
 
         it('can increase healing done by the caster', () => {
@@ -162,9 +145,9 @@ describe('calculateHealing', () => {
                 statusEffects: [{ healingDone }]
             };
             const result = calculateHealing(actor, character, healingSource);
-            const expectedHealing = getExpectedHealing([
+            const expectedHealing = multiply([
                 character.maxHP,
-                healingSource.amount,
+                healingSource.multiplier,
                 1 + healingDone
             ]);
 
@@ -182,9 +165,9 @@ describe('calculateHealing', () => {
                 statusEffects: [{ healingTaken }]
             };
             const result = calculateHealing(character, target, healingSource);
-            const expectedHealing = getExpectedHealing([
+            const expectedHealing = multiply([
                 target.maxHP,
-                healingSource.amount,
+                healingSource.multiplier,
                 1 + healingTaken
             ]);
 
@@ -202,9 +185,9 @@ describe('calculateHealing', () => {
                 statusEffects: [{ healingTaken }]
             };
             const result = calculateHealing(character, target, healingSource);
-            const expectedHealing = getExpectedHealing([
+            const expectedHealing = multiply([
                 target.maxHP,
-                healingSource.amount,
+                healingSource.multiplier,
                 1 + healingTaken
             ]);
 
@@ -224,8 +207,8 @@ describe('calculateHealing', () => {
                 statusEffects: [{ healingTaken }]
             };
             const result = calculateHealing(actor, character, healingSource);
-            const expectedHealing = getExpectedHealing([
-                character.maxHP, healingSource.amount
+            const expectedHealing = multiply([
+                character.maxHP, healingSource.multiplier
             ]);
 
             expect(result).toEqual({
@@ -242,8 +225,8 @@ describe('calculateHealing', () => {
                 statusEffects: [{ healingDone }]
             };
             const result = calculateHealing(character, target, healingSource);
-            const expectedHealing = getExpectedHealing([
-                target.maxHP, healingSource.amount
+            const expectedHealing = multiply([
+                target.maxHP, healingSource.multiplier
             ]);
 
             expect(result).toEqual({
@@ -265,9 +248,9 @@ describe('calculateHealing', () => {
                 statusEffects: [{ healingTaken }]
             };
             const result = calculateHealing(actor, target, healingSource);
-            const expectedHealing = getExpectedHealing([
+            const expectedHealing = multiply([
                 target.maxHP,
-                healingSource.amount,
+                healingSource.multiplier,
                 1 + healingDone,
                 1 + healingTaken
             ]);

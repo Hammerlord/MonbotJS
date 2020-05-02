@@ -110,9 +110,9 @@ export interface AbilityAction {
  * - It doesn't matter what element the healing spell was (famous last words...).
  */
 export interface AbilityHealing {
-    on: 'target' | 'actor'; // This is who to calculate the healing amount from... not who to target
-    amount: number;
-    calculationType: 'percentage' | 'flat';
+    calculationTarget: 'target' | 'actor'; // This is who to calculate the healing amount from...
+    amount: number; // Flat healing
+    multiplier: number;
     /** Required if type is 'percentage' */
     stat?: 'maxHP' | 'HP' | 'maxMana' | 'mana';
     bonus?: AbilityBonus;
