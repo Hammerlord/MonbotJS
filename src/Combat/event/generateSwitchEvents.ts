@@ -1,10 +1,13 @@
-import { PopulatedCommand } from "../models";
-import { CombatEvent, EventType } from "./Event";
-import { applyTeamEvent } from "./applyEvent";
-import { getActiveEffects } from "../CombatTeam";
+import { CombatElemental } from "../../Elemental/CombatElemental";
+import { CombatTeam } from "../models";
+import { CombatEvent, EffectEventTypes, EventType } from "./Event";
+import { generateEffectEvents } from "./generateEffectEvent";
 
-export function generateSwitchEvents(getTeamById, command: PopulatedCommand): CombatEvent[] {
-    const { team, switchedWith } = command;
+export function generateSwitchEvents(
+    getTeamById: (id: string) => CombatTeam,
+    getElementalById: (id: string) => CombatElemental,
+    { team, switchedWith }
+): CombatEvent[] {
 
     const childEvent = {
         team: team.id,
@@ -16,18 +19,9 @@ export function generateSwitchEvents(getTeamById, command: PopulatedCommand): Co
         source: null,
         events: [childEvent]
     };
-    applyTeamEvent(team, childEvent);
 
-    const events: CombatEvent[] = [switchEvent];
-
-    for (const effect of getActiveEffects(team)) {
-        const { onSwitchIn } = effect;
-        if (!onSwitchIn) {
-            continue;
-        }
-
-        // TODO effect trigger
-    }
-
-    return events;
+    return [
+        switchEvent,
+        ...generateEffectEvents(EffectEventTypes.ON_SWITCH_IN, team, getElementalById)
+    ];
 }

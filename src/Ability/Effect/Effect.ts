@@ -1,8 +1,9 @@
 /**
  * @file Model structures for status effects
  */
-
-import { Elements, ElementCategory } from '../../Element/Elements';
+import { ElementCategory, Elements } from '../../Element/Elements';
+import { AbilityHealing } from '../Ability';
+import { AbilityBonus } from './../../Combat/abilitybonus/Bonus';
 
 export enum EffectType {
     NONE = 'None',
@@ -117,21 +118,23 @@ export interface Effect {
     onEffectDispelled?: EffectEvent;
 }
 
-/** What should happen at various events within an effect's lifetime */
+/**
+ * What should happen at various events within an effect's lifetime.
+ * TODO conditions
+ */
 export interface EffectEvent {
+    // Whether this should affect the target or the elemental who applied the effect.
+    affects: 'target' | 'applier';
+
     /**
      * If this effect should deal damage over time to the target(s), this value applies a percentage of
      * the applier's attack stat. Eg. a value of 1 uses 100% of the actor's attack stat.
      * 0: This effect does no damage.
      */
     damageMultiplier?: number;
-    damageBonus?: number;
+    damageBonus?: AbilityBonus;
 
-    /**
-     * Like damageMultiplier, but with healing. If 0, this effect does no healing.
-     */
-    healingMultiplier?: number;
-    healingBonus?: number;
+    healing?: AbilityHealing;
 
     /** How much mana to add/remove at this event. Integer. */
     manaChange?: number;

@@ -1,3 +1,4 @@
+import { Battlefield } from './../models';
 import { AbilityAction, TargetType } from '../../Ability/Ability';
 import { getAffectedTeams } from '../command/getAffectedTeams';
 import { calculateDamage, DamageSource } from '../damage/calculator';
@@ -7,7 +8,8 @@ import { CombatEvent, EventType, TeamEvent } from './Event';
 export function resolveAbilityAction(
     action: AbilityAction,
     command: PopulatedCommand,
-    sides): CombatEvent {
+    sides: Battlefield
+): CombatEvent {
 
     const affectedTeams = getAffectedTeams(action.targetType, command, sides);
     return {

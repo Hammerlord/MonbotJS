@@ -2,10 +2,21 @@ import { DamageCalculation } from "../damage/calculator";
 import { HealingCalculation } from "../healing/calculator";
 import { EffectTarget } from "../models";
 
+export enum EffectEventTypes {
+    ON_RECEIVE_DAMAGE = 'onReceiveDamage',
+    ON_RECEIVE_ATTACK = 'onReceiveAttack',
+    ON_RECEIVE_HEALING = 'onReceiveHealing',
+    ON_ABILITY_USE = 'onAbilityUse',
+    ON_SYNCHRO = 'onSynchro',
+    ON_SWITCH_IN = 'onSwitchIn',
+    ON_ENEMY_SWITCH_IN = 'onEnemySwitchIn'
+}
+
 export enum EventType {
     /** For calculating ability costs */
     ABILITY_USE = 'abilityUse',
     ABILITY_ACTION = 'abilityAction',
+    ABILITY_RECOIL = 'abilityRecoil',
     ITEM = 'item',
     SWITCH = 'switch',
     SYNCHRO = 'synchro',

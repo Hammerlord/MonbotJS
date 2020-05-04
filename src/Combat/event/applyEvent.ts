@@ -6,6 +6,7 @@ import { TeamEvent } from './Event';
 
 /**
  * This *mutates team* and returns it in its updated state.
+ * TODO dispel
  */
 export function applyTeamEvent(team: CombatTeam, event: TeamEvent): CombatTeam {
     const { damage, healing, manaChange, defendChargesChange, forceSwitch, switchedWith, effects } = event;
@@ -26,7 +27,13 @@ export function applyTeamEvent(team: CombatTeam, event: TeamEvent): CombatTeam {
     }
 
     if (effects) {
-        const { applied, target, applier } = effects;
+        const {
+            applied = [],
+            dispelled = [], // TODO
+            target,
+            applier
+        } = effects;
+
         const effectsToApply = applied.map(getEffectById);
         if (active && target === EffectTarget.ACTIVE_ELEMENTAL) {
             active.statusEffects = applyEffects(effectsToApply, applier, team.active.statusEffects);

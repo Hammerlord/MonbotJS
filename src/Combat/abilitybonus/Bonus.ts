@@ -33,8 +33,8 @@ export interface AbilityBonus {
     conditions: BonusConditions[];
 }
 
-interface BonusConditions {
-    on: 'actor' | 'target';
+export interface BonusConditions {
+    calculationTarget: 'actor' | 'target';
     /** Equals | Less than | Greater than -- Only used in pass/fail check */
     comparator?: 'eq' | 'lt' | 'gt';
 

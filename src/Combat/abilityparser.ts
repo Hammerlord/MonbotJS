@@ -8,7 +8,7 @@ import { EffectType } from '../Ability/Effect/Effect';
  * Status effects should include team status effects.
  */
 export function canUseAbility(
-    actor: { HP: number, mana: number, statusEffects: AppliedEffect[] },
+    actor: { HP: number, mana: number, statusEffects: AppliedEffect[] } | undefined,
     defendCharges: number = 0,
     requirements?: AbilityRequirements): boolean {
 
